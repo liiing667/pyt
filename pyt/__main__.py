@@ -10,8 +10,7 @@ from .analysis.fixed_point import analyse
 from .cfg import make_cfg
 from .core.ast_helper import generate_ast
 from .core.project_handler import (
-    get_directory_modules,
-    get_modules
+    ModuleIndex
 )
 from .usage import parse_args
 from .vulnerabilities import (
@@ -83,7 +82,8 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
 
     if args.project_root:
         directory = os.path.normpath(args.project_root)
-        project_modules = get_modules(directory, prepend_module_root=args.prepend_module_root)
+        module_index = ModuleIndex(directory, prepend_module_root=args.prepend_module_root)
+        project_modules = module_index.project_modules
 
     cfg_list = list()
     for path in sorted(files):
@@ -93,9 +93,10 @@ def main(command_line_args=sys.argv[1:]):  # noqa: C901
 
         if not args.project_root:
             directory = os.path.dirname(path)
-            project_modules = get_modules(directory, prepend_module_root=args.prepend_module_root)
+            module_index = ModuleIndex(directory, prepend_module_root=args.prepend_module_root)
+            project_modules = module_index.project_modules
 
-        local_modules = get_directory_modules(directory)
+        local_modules = module_index.local_modules(directory)
         tree = generate_ast(path)
 
         cfg = make_cfg(
